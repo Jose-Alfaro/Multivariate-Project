@@ -1,5 +1,4 @@
-setwd("C:/Users/josea/Desktop/Stat 7331 Multivariate")
-df <- read.csv("cereal.csv")
+# df <- read.csv("cereal.csv")
 # df <- multishapes[, 1:2]
 # df <- df[sample(nrow(df), 750), ]
 # validate input
