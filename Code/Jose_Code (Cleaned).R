@@ -328,4 +328,43 @@ grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 2)
 grid.arrange(p4, p5, p6, nrow = 1)
 
 
+#Problem 2:  Factor Analysis, Canonical Correlation, Clustering
+
+#Factor Analysis
+library(psych)
+library(parallel)
+
+prob2 = data[,c(2,3,7:10,12,14)]
+prob2.vss = vss(prob2, n.obs=dim(data)[1])
+prob2.vss
+#vss chooses 4 factors
+factanal(prob2, factors = 4, rotation = "varimax")
+
+
+#Canonical Correlation
+library(ggplot2)
+library(CCA)
+library(GGally)
+
+dat1 = prob2[,c(1,2,4,6,7)]
+dat2 = prob2[,c(3,5,8)]
+ggpairs(dat1)
+ggpairs(dat2)
+
+cc1 = cc(dat1, dat2)
+cc1[3:4]
+cc1$cor
+cc2 = comput(dat1, dat2, cc1)
+cc2[3:6]
+
+#Clustering 
+
+data.std = data.st[,c(2,3,7:10,12,14)]
+hc.complete = hclust(dist(data.std), method = "complete")
+plot(hc.complete, main = "Complete Linkage", cex = 0.7, labels = data$Brand)
+
+library(factoextra)
+#K-Means Clustering with K = 2
+kmeans.2 = kmeans(data.std, 2)
+fviz_cluster(kmeans.2, data.std)
 
