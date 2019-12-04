@@ -6,6 +6,7 @@ library(psych)
 library(anomalize)
 library(tidyverse)
 library(gridExtra)
+library(xtable)
 setwd("C:/Users/josea/Desktop/Stat 7331 Multivariate/Final Project")
 
 ## Loading Data
@@ -52,19 +53,19 @@ names(dj2)[2] <- "Dow Jones"
 names(epu2)[2] <- "EPU Index"
 names(nas2)[2] <- "NASDAQ"
 names(ny2)[2] <- "New York Stock Exchange"
-names(cny2)[2] <- "Chinese Yuan"
-names(eur2)[2] <- "Europe"
+names(cny2)[2] <- "Yuan"
+names(eur2)[2] <- "Euro"
 names(gbp2)[2] <- "Pound"
 names(vxo2)[2] <- "Volatil Index"
 
 # Merging Datasets into One Set
 temp <- merge(bit2, eth2, all = T)
 temp2 <- merge(temp, lite2, all = T)
-temp3 <- merge(temp2, gold2, all = T)
-temp4 <- merge(temp3, oil2, all = T)
-temp5 <- merge(temp4, cny2, all = T)
-temp6 <- merge(temp5, eur2, all = T)
-temp7 <- merge(temp6, gbp2, all = T)
+temp3 <- merge(temp2, cny2, all = T)
+temp4 <- merge(temp3, eur2, all = T)
+temp5 <- merge(temp4, gbp2, all = T)
+temp6 <- merge(temp5, gold2, all = T)
+temp7 <- merge(temp6, oil2, all = T)
 temp8 <- merge(temp7, sp2, all = T)
 temp9 <- merge(temp8, dj2, all = T)
 temp10 <- merge(temp9, epu2, all = T)
@@ -81,6 +82,7 @@ dta <- tmp[, -1]
 dta$`Volatil Index` <- as.numeric(dta$`Volatil Index`)
 dim(dta)
 head(dta)
+dta <- as.data.frame(scale(dta))
 
 # Plotting Cryptocurrencies, Fiat Currencies, Commodities
 crypto <- dta[, 1:3]
@@ -92,6 +94,7 @@ ggpairs(fiat)
 ggpairs(comm)
 
 # Computing Correlation Matrix
+dta <- dta[, -c(10:14)]
 res <- cor(dta)
 round(dta, 2)
 res2 <- rcorr(as.matrix(dta))
@@ -113,7 +116,7 @@ corrplot(
 )
 
 # Factor Analysis
-dta1 <- dta[, c(1, 2, 3, 6, 7, 8)]
+dta1 <- dta[, -c(7:9)]
 dta1 <- as.data.frame(scale(dta1))
 fa.parallel(dta1)
 
@@ -126,21 +129,45 @@ FA1 <- factanal(dta1, 2, rotation = "varimax")
 ## Plotting Cryptocurrencies and Fiat Currencies over Time
 # Fiat Currencies
 dta1$Date <- tmp$Date
+
 ggplot(data = dta1, aes(x = Date)) +
-  geom_line(aes(y = Europe, colour = "Europe", group = 1), color = "blue") +
+  geom_line(aes(y = Euro, colour = "Euro", group = 1), color = "blue") +
   geom_line(aes(y = Pound, colour = "Pound", group = 1), color = "red") +
-  geom_line(aes(y = `Chinese Yuan`, colour = "Chinese", group = 1), color = "green") +
+  geom_line(aes(y = Yuan, colour = "Yuan", group = 1), color = "green") +
   xlab('Dates') +
   ylab('Currency Change') +
-  theme(legend.position = "right") +
-  scale_colour_manual(
-    name = "Legend",
-    values = c(
-      "Europe" = "blue",
-      "Pound" = "red",
-      "Chinese" = "green"
-    )
-  )
+  scale_color_discrete(name = "Legend", labels = c("Europe", "Pound"))
+
+
+
+ggplot() +
+  geom_line(data = dta1,
+            aes(y = Euro, x = Date, colour = "darkblue"),
+            size = 1) +
+  geom_line(data = dta1,
+            aes(y = Pound, x = Date, colour = "red"),
+            size = 1) +
+  geom_line(data = dta1,
+            aes(y = Yuan, x = Date, colour = "green"),
+            size = 1) +
+  scale_color_discrete(name = "", labels = c("Europe", "Chinese Yuan", "Pound")) +
+  ggtitle("Fiat Currency")
+
+
+ggplot() +
+  geom_line(data = dta1,
+            aes(y = Bitcoin, x = Date, colour = "darkblue"),
+            size = 1) +
+  geom_line(data = dta1,
+            aes(y = Litecoin, x = Date, colour = "red"),
+            size = 1) +
+  geom_line(data = dta1,
+            aes(y = Ethereum, x = Date, colour = "green"),
+            size = 1) +
+  scale_color_discrete(name = "", labels = c("Bitcoin", "Ethereum", "Litecoin")) +
+  ggtitle("Cryptocurrency")
+
+
 
 ggplot(data = dta1, aes(x = Date)) +
   geom_line(aes(y = Litecoin, colour = "Lite", group = 1), color = "blue") +
@@ -262,7 +289,7 @@ anomalies <-
 
 
 ###Europe
-df %>% time_decompose(Europe,
+df %>% time_decompose(Euro,
                       method = "stl",
                       frequency = "auto",
                       trend = "auto") %>% anomalize(remainder,
@@ -271,17 +298,17 @@ df %>% time_decompose(Europe,
                                                     max_anoms = 0.1) %>% plot_anomaly_decomposition()
 
 #Removes Trend and Seasonality
-p5 <- df %>% time_decompose(Europe) %>% anomalize(remainder) %>% time_recompose() %>%  plot_anomalies(time_recomposed = TRUE,
+p5 <- df %>% time_decompose(Euro) %>% anomalize(remainder) %>% time_recompose() %>%  plot_anomalies(time_recomposed = TRUE,
                                                                                                ncol = 3,
-                                                                                               alpha_dots = 0.5) + labs(title = "Europe Euro")
+                                                                                               alpha_dots = 0.5) + labs(title = "Euro")
 
 #Extract the anomalies
 anomalies <-
-  df %>% time_decompose(Europe) %>%  anomalize(remainder) %>%  time_recompose() %>%  filter(anomaly == 'Yes')
+  df %>% time_decompose(Euro) %>%  anomalize(remainder) %>%  time_recompose() %>%  filter(anomaly == 'Yes')
 
 
 ###Chinese Yuan
-df %>% time_decompose(`Chinese Yuan`,
+df %>% time_decompose(Yuan,
                       method = "stl",
                       frequency = "auto",
                       trend = "auto") %>% anomalize(remainder,
@@ -290,12 +317,15 @@ df %>% time_decompose(`Chinese Yuan`,
                                                     max_anoms = 0.1) %>% plot_anomaly_decomposition()
 
 #Removes Trend and Seasonality
-p6 <- df %>% time_decompose(`Chinese Yuan`) %>% anomalize(remainder) %>% time_recompose() %>%  plot_anomalies(time_recomposed = TRUE,                                                                                             ncol = 3,
-                                                                                               alpha_dots = 0.5) + labs(title = "Chinese Yuan")
+p6 <- df %>% time_decompose(Yuan) %>% anomalize(remainder) %>% time_recompose() %>%  plot_anomalies(time_recomposed = TRUE,                                                                                             ncol = 3,
+                                                                                               alpha_dots = 0.5) + labs(title = "Yuan")
 
 #Extract the anomalies
 anomalies <-
-  df %>% time_decompose(`Chinese Yuan`) %>%  anomalize(remainder) %>%  time_recompose() %>%  filter(anomaly == 'Yes')
+  df %>% time_decompose(Yuan) %>%  anomalize(remainder) %>%  time_recompose() %>%  filter(anomaly == 'Yes')
 
-grid.arrange(p1, p2, p3, nrow = 1)
+grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 2)
 grid.arrange(p4, p5, p6, nrow = 1)
+
+
+
